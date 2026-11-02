@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AISTAR-SOC | Autonomous Agentic Cybersecurity Operations Center</title>
+  <meta name="description" content="Production-grade Autonomous Agentic AI SOC Analyst dashboard for real-time telemetry ingestion, ML anomaly detection, MITRE ATT&CK mapping, and SOAR response.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="soc-layout">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="soc-header">
+      <div class="header-brand">
+        <div class="brand-radar" id="radar-indicator">
+          <div class="radar-sweep"></div>
+          <div class="radar-dot"></div>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">AISTAR-SOC <span class="badge-agentic">AGENTIC AI</span></div>
+          <div class="brand-sub">Autonomous Tier-1 & Tier-2 Cyber Defense Center</div>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="status-pill status-active">
+          <span class="pulsing-led"></span>
+          <span id="agent-status-text">SOC ENGINE ACTIVE</span>
+        </div>
+        <div class="status-pill" id="agent-provider-tag">AGENT: REASONING v2.5</div>
+        <div class="time-display" id="live-ist-clock">00:00:00 IST</div>
+      </div>
+    </header>
+
+    <!-- ATTACK SIMULATOR QUICK BAR -->
+    <section class="simulator-strip" id="simulator-container">
+      <div class="simulator-label">
+        <span class="icon">⚡</span>
+        <strong>Inject Cyber Attack Campaign:</strong>
+      </div>
+      <div class="simulator-buttons">
+        <button class="sim-btn sim-bruteforce" id="btn-sim-brute" onclick="injectScenario('brute_force')">
+          <span class="sim-dot"></span> SSH Brute Force (T1110)
+        </button>
+        <button class="sim-btn sim-sqli" id="btn-sim-sqli" onclick="injectScenario('sqli')">
+          <span class="sim-dot"></span> SQL Injection / WAF (T1190)
+        </button>
+        <button class="sim-btn sim-c2" id="btn-sim-c2" onclick="injectScenario('c2_beacon')">
+          <span class="sim-dot"></span> Cobalt Strike C2 (T1071)
+        </button>
+        <button class="sim-btn sim-mimikatz" id="btn-sim-mimi" onclick="injectScenario('mimikatz')">
+          <span class="sim-dot"></span> LSASS Credential Dump (T1003)
+        </button>
+        <button class="sim-btn sim-exfil" id="btn-sim-exfil" onclick="injectScenario('exfiltration')">
+          <span class="sim-dot"></span> Data Exfiltration (T1041)
+        </button>
+        <button class="sim-btn sim-benign" id="btn-sim-benign" onclick="injectScenario('benign')">
+          <span class="sim-dot"></span> Normal User Traffic
+        </button>
+      </div>
+    </section>
+
+    <!-- METRICS KPI GRID -->
+    <section class="metrics-grid" id="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">TELEMETRY INGESTED</span>
+          <span class="metric-icon">📡</span>
+        </div>
+        <div class="metric-value" id="val-events">0</div>
+        <div class="metric-sub">Multi-source normalized flows</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">INCIDENTS INVESTIGATED</span>
+          <span class="metric-icon">🛡️</span>
+        </div>
+        <div class="metric-value text-amber" id="val-incidents">0</div>
+        <div class="metric-sub">Autonomous AI triage & ReAct</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">ACTIVE QUARANTINES</span>
+          <span class="metric-icon">⛔</span>
+        </div>
+        <div class="metric-value text-red" id="val-quarantines">0</div>
+        <div class="metric-sub">SOAR perimeter & host isolation</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">AUTONOMOUS CONTAINMENT</span>
+          <span class="metric-icon">⚡</span>
+        </div>
+        <div class="metric-value text-green" id="val-containment-rate">100%</div>
+        <div class="metric-sub">Zero-touch automated mitigation</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">AVG MTTR (RESPOND)</span>
+          <span class="metric-icon">⏱️</span>
+        </div>
+        <div class="metric-value text-cyan" id="val-mttr">2.8s</div>
+        <div class="metric-sub">Sub-3s machine response</div>
+      </div>
+    </section>
+
+    <!-- AGENTIC AI WORKFLOW PIPELINE VISUALIZER -->
+    <section class="pipeline-section">
+      <div class="section-title">
+        <span>🤖 AUTONOMOUS AGENT REASONING PIPELINE</span>
+        <span class="pipeline-tag">Perception → Forensic Query → Synthesis → SOAR Containment</span>
+      </div>
+      <div class="pipeline-flow">
+        <div class="pipeline-node active">
+          <div class="node-number">01</div>
+          <div class="node-info">
+            <div class="node-title">Telemetry Ingestion</div>
+            <div class="node-desc">Streaming Normalizer</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="pipeline-node active">
+          <div class="node-number">02</div>
+          <div class="node-info">
+            <div class="node-title">ML & Rule Detection</div>
+            <div class="node-desc">IsolationForest + Sigma</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="pipeline-node active">
+          <div class="node-number">03</div>
+          <div class="node-info">
+            <div class="node-title">Threat Intel Enrichment</div>
+            <div class="node-desc">OSINT, Reputation, ASN</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="pipeline-node active-glow">
+          <div class="node-number">04</div>
+          <div class="node-info">
+            <div class="node-title">AI ReAct Reasoning</div>
+            <div class="node-desc">Forensic Tool Chain & Risk</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="pipeline-node active">
+          <div class="node-number">05</div>
+          <div class="node-info">
+            <div class="node-title">Automated SOAR</div>
+            <div class="node-desc">Firewall Block & Host Quarantine</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN DASHBOARD CONTENT SPLIT -->
+    <main class="soc-main">
+      <!-- LEFT COLUMN: INCIDENTS & THREAT INVESTIGATIONS -->
+      <div class="column-left">
+        <div class="card incident-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🚨</span>
+              <span>Live Security Incidents (AI Triaged)</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn-refresh" id="btn-refresh-incidents" onclick="loadIncidents()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="soc-table" id="incidents-table">
+              <thead>
+                <tr>
+                  <th>INCIDENT ID</th>
+                  <th>TIMESTAMP</th>
+                  <th>SEVERITY</th>
+                  <th>MITRE TECHNIQUE</th>
+                  <th>TARGET / IOC</th>
+                  <th>RISK</th>
+                  <th>STATUS</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="incidents-tbody">
+                <tr>
+                  <td colspan="8" class="text-center">Loading triaged incidents...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TELEMETRY FEED -->
+        <div class="card telemetry-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">📊</span>
+              <span>Raw Security Telemetry Stream</span>
+            </div>
+            <span class="card-sub-tag" id="telemetry-counter">Showing 10 latest events</span>
+          </div>
+          <div class="table-container max-h-300">
+            <table class="soc-table" id="telemetry-table">
+              <thead>
+                <tr>
+                  <th>EVENT ID</th>
+                  <th>TYPE</th>
+                  <th>HOST</th>
+                  <th>SRC IP</th>
+                  <th>DEST IP:PORT</th>
+                  <th>PAYLOAD / COMMAND</th>
+                </tr>
+              </thead>
+              <tbody id="telemetry-tbody">
+                <tr><td colspan="6" class="text-center">Awaiting telemetry...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: THREAT INTEL, QUARANTINES & MITRE MATRIX -->
+      <div class="column-right">
+        <!-- QUARANTINED ASSETS / SOAR CONSOLE -->
+        <div class="card quarantine-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🛡️</span>
+              <span>Active SOAR Quarantines</span>
+            </div>
+            <span class="badge-red" id="quarantine-count-badge">0 Active</span>
+          </div>
+          <div class="quarantine-list" id="quarantine-items">
+            <div class="empty-placeholder">No active perimeter blocks.</div>
+          </div>
+        </div>
+
+        <!-- MITRE ATT&CK HEATMAP -->
+        <div class="card mitre-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🎯</span>
+              <span>MITRE ATT&CK Enterprise Matrix Coverage</span>
+            </div>
+          </div>
+          <div class="mitre-grid" id="mitre-matrix-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- THREAT INTEL REPUTATION EXPLORER -->
+        <div class="card intel-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🌐</span>
+              <span>Threat Intel IOC Search</span>
+            </div>
+          </div>
+          <div class="intel-search-box">
+            <input type="text" id="intel-query-input" placeholder="Query IP (e.g. 194.26.29.112)..." value="194.26.29.112">
+            <button class="btn-primary" onclick="searchThreatIntel()">Lookup</button>
+          </div>
+          <div class="intel-result" id="intel-result-display">
+            <!-- Displayed on search -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- CYBERSECURITY ANALYTICS & BI DASHBOARD -->
+    <section class="analytics-section" id="analytics-section">
+      <div class="analytics-header">
+        <div class="analytics-title">
+          <span class="header-icon">📈</span>
+          <span>CYBERSECURITY DATA ANALYTICS & THREAT INTELLIGENCE BI</span>
+        </div>
+        <div class="analytics-sub">Real-Time Interactive Visualizations • IST Time-Series Volumetrics • MITRE Radar • Asset Exposure Index</div>
+      </div>
+
+      <div class="analytics-grid">
+        <!-- CHART 1: TEMPORAL FLOW (LINE/AREA) -->
+        <div class="card analytics-card chart-card-wide">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">⏱️</span>
+              <span>Telemetry Ingestion & Threat Timeline (IST)</span>
+            </div>
+            <span class="card-sub-tag">Time-Series Volumetrics</span>
+          </div>
+          <div class="chart-container" style="height: 240px; position: relative;">
+            <canvas id="chart-temporal"></canvas>
+          </div>
+        </div>
+
+        <!-- CHART 2: SEVERITY DONUT -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🍩</span>
+              <span>Threat Severity Distribution</span>
+            </div>
+            <span class="card-sub-tag">Risk Proportions</span>
+          </div>
+          <div class="chart-container" style="height: 240px; position: relative;">
+            <canvas id="chart-severity"></canvas>
+          </div>
+        </div>
+
+        <!-- CHART 3: ATTACK VECTORS (HORIZONTAL BARS) -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">📊</span>
+              <span>Top Attack Vectors & Techniques</span>
+            </div>
+            <span class="card-sub-tag">MITRE Technique Hits</span>
+          </div>
+          <div class="chart-container" style="height: 240px; position: relative;">
+            <canvas id="chart-vectors"></canvas>
+          </div>
+        </div>
+
+        <!-- CHART 4: MITRE RADAR -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🎯</span>
+              <span>MITRE ATT&CK Tactic Threat Radar</span>
+            </div>
+            <span class="card-sub-tag">Tactic Exposure</span>
+          </div>
+          <div class="chart-container" style="height: 240px; position: relative;">
+            <canvas id="chart-mitre-radar"></canvas>
+          </div>
+        </div>
+
+        <!-- CHART 5: ASSET RISK (GROUPED BAR) -->
+        <div class="card analytics-card chart-card-wide">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">🖥️</span>
+              <span>Target Asset Vulnerability & Incident Load</span>
+            </div>
+            <span class="card-sub-tag">Host Criticality vs Risk Index</span>
+          </div>
+          <div class="chart-container" style="height: 240px; position: relative;">
+            <canvas id="chart-assets"></canvas>
+          </div>
+        </div>
+
+        <!-- CARD 6: SOAR EFFICIENCY & BI METRICS -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="header-icon">⚡</span>
+              <span>SOAR Efficiency & Operational BI</span>
+            </div>
+            <span class="card-sub-tag">Automation Health</span>
+          </div>
+          <div class="soar-bi-grid" id="analytics-soar-bi">
+            <div class="bi-stat-box">
+              <div class="bi-stat-num text-cyan" id="bi-hours-saved">0h</div>
+              <div class="bi-stat-label">Analyst Hours Saved (Est.)</div>
+            </div>
+            <div class="bi-stat-box">
+              <div class="bi-stat-num text-green" id="bi-auto-rate">100%</div>
+              <div class="bi-stat-label">Zero-Touch Containment</div>
+            </div>
+            <div class="bi-stat-box">
+              <div class="bi-stat-num text-amber" id="bi-mttd">1.4s</div>
+              <div class="bi-stat-label">Mean Time to Detect (MTTD)</div>
+            </div>
+            <div class="bi-stat-box">
+              <div class="bi-stat-num text-red" id="bi-quarantine-count">0</div>
+              <div class="bi-stat-label">Threats In Quarantine</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARGET ASSET RISK TABLE -->
+      <div class="card analytics-card" style="margin-top: 18px;">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="header-icon">🛡️</span>
+            <span>Target Host Risk Exposure Matrix</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="soc-table" id="analytics-asset-table">
+            <thead>
+              <tr>
+                <th>TARGET HOST</th>
+                <th>INCIDENTS</th>
+                <th>MAX SEVERITY</th>
+                <th>AVG RISK</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-asset-tbody">
+              <tr><td colspan="5" class="text-center">Calculating host risk scores...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVESTIGATION MODAL (DEEP DIVE CHAIN-OF-THOUGHT) -->
+    <div class="modal-overlay" id="investigation-modal">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-title" id="modal-incident-id">INCIDENT DOSSIER</div>
+            <div class="modal-sub" id="modal-incident-summary">Autonomous Forensic Analysis</div>
+          </div>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+
+        <div class="modal-body" id="modal-content">
+          <!-- Filled dynamically -->
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="exportIncidentReport()">📄 Export Incident Report</button>
+          <button class="btn-danger" id="modal-btn-override" onclick="triggerManualPlaybook()">⚡ Execute Containment Playbook</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
